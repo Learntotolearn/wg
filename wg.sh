@@ -289,7 +289,7 @@ start_menu(){
     echo " 1. 生成一对wireguard配置 "
     echo " 2. 输出客户端配置文件 "
     echo " 3. 输出客户端配置二维码 "
-    echo " 4. 为指定wireguard添加用户"
+    echo " 4. 为指定wireguard文件添加Peer"
     echo " 0. Exit"
     echo "=============================================================================="
     echo
