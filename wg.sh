@@ -58,12 +58,10 @@ wg_server_conf (){
     [Peer]
     PublicKey = $wg_c_pubkey
     AllowedIPs = $wg_s_allowIP " > $wg_dir$wg_pub_name.conf
-    echo -e "${GreenBG} wireguard服务端文件已生成在$wg_dir目录下 ${Font} \n"
-    echo -e "${GreenBG} 开始生成客户端配置文件 ${Font} \n"
-}
+    echo -e "${GreenBG} wireguard服务端文件已生成在$wg_dir目录下 ${Font}\n"
+    echo -e "${GreenBG} 开始生成客户端配置文件 ${Font}\n"
 
-#生成客户端配置文件 
-wg_client_conf (){
+    ##### 生成客户端配置文件 ########
     read -e -p "输入客户端监听端口（使用未被占用的端口）: " wg_c_listenPort
     #
     while true; do
@@ -78,7 +76,7 @@ wg_client_conf (){
      [ $? -eq 0 ] && break
     done
 
-    read -e -p "输入服务端wireguard监听端口: " wg_to_s_listenPort
+    #read -e -p "输入服务端wireguard监听端口: " wg_to_s_listenPort
     wg_s_pubkey=$(cat $wg_dir$wg_pub_name"_publickey") 
     wg_c_prikey=$(cat $wg_dir$wg_pri_name"_privatekey")
     echo "
@@ -91,12 +89,13 @@ wg_client_conf (){
 
     [Peer]
     PublicKey = $wg_s_pubkey
-    Endpoint = $wg_s_serverIP:$wg_to_s_listenPort
+    Endpoint = $wg_s_serverIP:$wg_s_listenPort
     AllowedIPs = 0.0.0.0/0
     PersistentKeepalive = 25 " > $wg_dir$wg_pri_name.conf
     echo -e "${GreenBG} wireguard客户端文件已生成在$wg_dir目录下\n  ${Font}"
     echo -e "${GreenBG} 开始启动服务端wg ${Font} \n"
 }
+
 
 
 #启动wireguard服务端
@@ -111,12 +110,14 @@ wg_start_server (){
     wg setconf $wg_pub_name $wg_dir$wg_pub_name.conf
     ip link set up $wg_pub_name 
     ip link set mtu 1360 dev $wg_pub_name
+    eth=`ip route | grep default | grep dev | awk '{print $5}'`
+    iptables -t nat -A POSTROUTING -o $eth -j MASQUERADE
     if [ $? -eq 0 ] ; then
         echo -e "${GreenBG} 启动成功 ${Font} \n"
         else
         echo -e "${RedBG} 启动失败 ${Font} \n"
     fi
-    
+    start_menu
 }
 
 wg_client_show(){
@@ -150,7 +151,7 @@ add_wg_client(){
     else
         exit 1
     fi
-    #
+    #iptables -t nat -A POSTROUTING -o eth0 -j MASQUERADE
     read -e -p "输入客户端监听端口（使用未被占用的端口）: " wg_cc_listenPort
     #
     while true; do
@@ -236,36 +237,48 @@ qr(){
     if [[ "${ID}" == "centos" && ${VERSION_ID} -ge 7 ]]; then
             echo -e "${OK} ${GreenBG} The current system is Centos ${VERSION_ID} ${VERSION} ${Font}"
             INS="yum"
-            $INS update
-            $INS install qrencode
-            judge install
+            qrencode -V &>/dev/null 
+            if [[ ! 0 -eq $? ]]; then
+                $INS update
+                $INS install qrencode
+                judge install
+            fi
             cd $wg_dir
             read -e -p "请输入客户端文件名:" file_conf
             qrencode -t ansiutf8 < $file_conf
         elif [[ "${ID}" == "debian" && ${VERSION_ID} -ge 8 ]]; then
             echo -e "${OK} ${GreenBG} The current system is Debian ${VERSION_ID} ${VERSION} ${Font}"
             INS="apt"
-            $INS update
-            $INS install qrencode
-            judge install
+            qrencode -V
+            if [[ ! 0 -eq $? ]]; then
+                $INS update
+                $INS install qrencode
+                judge install
+            fi
             cd $wg_dir
             read -e -p "请输入客户端文件名:" file_conf
             qrencode -t ansiutf8 < $file_conf
         elif [[ "${ID}" == "ubuntu" && $(echo "${VERSION_ID}" | cut -d '.' -f1) -ge 16 ]]; then
             echo -e "${OK} ${GreenBG} The current system is Ubuntu ${VERSION_ID} ${UBUNTU_CODENAME} ${Font}"
             INS="apt"
-            $INS update
-            $INS install qrencode
-            judge install
+            qrencode -V
+            if [[ ! 0 -eq $? ]]; then
+                $INS update
+                $INS install qrencode
+                judge install
+            fi
             cd $wg_dir
             read -e -p "请输入客户端文件名:" file_conf
             qrencode -t ansiutf8 < $file_conf
         elif [[ "${ID}" == "alpine" && $(echo "${VERSION_ID}" | cut -d '.' -f1) -ge 3 ]]; then 
             echo -e "${OK} ${GreenBG} The current system is alpine ${VERSION_ID} ${UBUNTU_CODENAME} ${Font}"
             INS="apk"
-            $INS update
-            $INS add libqrencode
-            judge install
+            qrencode -V
+            if [[ ! 0 -eq $? ]]; then
+                $INS update
+                $INS add libqrencode
+                judge install
+            fi
             cd $wg_dir
             read -e -p "请输入客户端文件名:" file_conf
             qrencode -t ansiutf8 < $file_conf
@@ -284,12 +297,12 @@ start_menu(){
     echo " Welcome to AKA-World "
     echo " Info   :testing "
     echo " Author : BigW"
-    echo " Vsersion : 1.0.1"
+    echo " Vsersion : 1.0.2"
     echo "=============================================================================="
     echo " 1. 生成一对wireguard配置 "
     echo " 2. 输出客户端配置文件 "
     echo " 3. 输出客户端配置二维码 "
-    echo " 4. 为指定wireguard文件添加Peer"
+    echo " 4. 为指定wireguard添加用户"
     echo " 0. Exit"
     echo "=============================================================================="
     echo
@@ -298,7 +311,6 @@ start_menu(){
         1)
             pskey
             wg_server_conf
-            wg_client_conf
             wg_start_server
             ;;
         2)
