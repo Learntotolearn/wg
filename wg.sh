@@ -1,5 +1,5 @@
 #!/bin/bash
-
+export LANG="en_US.UTF-8"
 wg_dir="/etc/wireguard/"
 ID=$(cat /etc/os-release | grep  'ID=' | head -n 1 | awk -F "=" '{print $2}')
 VERSION_ID=$(cat /etc/os-release | grep  'VERSION_ID=' | awk -F "=" '{print $2}')
