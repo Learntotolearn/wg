@@ -1,3 +1,3 @@
 # wg
 ## 使用导航
-![image](https://user-images.githubusercontent.com/85656971/174518845-e4f646b6-9819-49df-82f8-dffa78fccbd8.png)
+![image](https://user-images.githubusercontent.com/85656971/175282177-5a6ba6ba-919f-4565-9018-67a96bbf2cf2.png)
