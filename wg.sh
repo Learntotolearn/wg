@@ -288,7 +288,34 @@ qr(){
     fi
 }
 
+#分流
 
+filter_add(){
+    echo -e "${GreenBG} 开始设置..... ${Font} \n"
+    wget https://raw.githubusercontent.com/Learntotolearn/wg/main/cn.sh &>/dev/null && bash cn.sh  && rm -f cn.sh
+    default_route=`ip route | grep default | awk '{print $3}'`
+    ip route add default via $default_route table 5300
+    if [[ 0 -eq $? ]]; then
+        echo -e "${GreenBG} 设置成功..... ${Font} \n"
+        else
+        echo -e "${RedBG} 设置失败..... ${Font} \n"
+    fi
+    
+}
+
+filter_del(){
+    echo -e "${GreenBG} 开始删除..... ${Font} \n"
+    wget https://raw.githubusercontent.com/Learntotolearn/wg/main/cn_del.sh &>/dev/null && bash cn_del.sh  && rm -f cn_del.sh
+    ip route del default table 5300
+     if [[ 0 -eq $? ]]; then
+        echo -e "${GreenBG} 删除成功..... ${Font} \n"
+        else
+        echo -e "${RedBG} 删除失败..... ${Font} \n"
+    fi
+}
+
+
+#
 
 
 start_menu(){
@@ -297,12 +324,14 @@ start_menu(){
     echo " Welcome to AKA-World "
     echo " Info   :testing "
     echo " Author : BigW"
-    echo " Vsersion : 1.0.2"
+    echo " Vsersion : 1.0.3"
     echo "=============================================================================="
     echo " 1. 生成一对wireguard配置 "
     echo " 2. 输出客户端配置文件 "
     echo " 3. 输出客户端配置二维码 "
     echo " 4. 为指定wireguard添加用户"
+    echo " 5. 添加分流规则"
+    echo " 6. 删除分流规则"
     echo " 0. Exit"
     echo "=============================================================================="
     echo
@@ -322,6 +351,12 @@ start_menu(){
         4)
             add_wg_client
             ;;
+        5)  
+            filter_add
+            ;;
+        6)
+            filter_del
+            ;;    
         0)
             exit 1
             ;;
